@@ -1,5 +1,8 @@
+import console.ConsoleUI;
+
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Doge");
+        ConsoleUI ui = new ConsoleUI();
+        ui.start();
     }
 }
