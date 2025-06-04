@@ -26,11 +26,11 @@ public class FlightController {
         return flightService.searchFlights(destination, date, passengers);
     }
 
-    public boolean bookFlight(String flightId, int seats) {
-        return flightService.bookSeats(flightId, seats);
+    public boolean bookFlight(String flightId, List<String> passengerNames) {
+        return flightService.bookFlight(flightId, passengerNames);
     }
 
-    public boolean cancelFlightBooking(String flightId, int seats) {
-        return flightService.cancelBooking(flightId, seats);
+    public boolean cancelBooking(String bookingId) {
+        return flightService.cancelBooking(bookingId);
     }
 }

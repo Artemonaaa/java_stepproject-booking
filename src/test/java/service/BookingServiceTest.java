@@ -4,74 +4,67 @@ import dao.BookingDao;
 import model.Booking;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 public class BookingServiceTest {
     private BookingService bookingService;
+    private BookingDao bookingDaoMock;
 
     @BeforeEach
     public void setUp() {
-        BookingDao bookingDao = new BookingDao() {
-            private List<Booking> bookings = new java.util.ArrayList<>();
-
-            @Override
-            public void addBooking(Booking booking) {
-                bookings.add(booking);
-            }
-
-            @Override
-            public boolean deleteById(String bookingId) {
-                return bookings.removeIf(b -> b.getId().equals(bookingId));
-            }
-
-            @Override
-            public List<Booking> findByPassengerName(String name) {
-                return bookings.stream()
-                        .filter(b -> b.getPassengerName().equalsIgnoreCase(name))
-                        .toList();
-            }
-
-            @Override
-            public List<Booking> getAll() {
-                return bookings;
-            }
-        };
-        bookingService = new BookingService(bookingDao);
+        bookingDaoMock = mock(BookingDao.class);
+        bookingService = new BookingService(bookingDaoMock);
     }
 
     @Test
-    public void testCreateBooking() {
-        bookingService.createBooking("FL123", "John Doe");
-        List<Booking> bookings = bookingService.findBookingsByPassenger("John Doe");
-        assertEquals(1, bookings.size());
-        assertEquals("FL123", bookings.get(0).getFlightId());
+    public void testBookFlight() {
+        List<Booking> bookings = new ArrayList<>();
+        when(bookingDaoMock.getAllBookings()).thenReturn(bookings);
+
+        boolean result = bookingService.bookFlight("FL123", List.of("John Doe"));
+        assertTrue(result);
+
+        verify(bookingDaoMock).saveAllBookings(anyList());
     }
 
     @Test
     public void testCancelBooking() {
-        bookingService.createBooking("FL999", "Jane Doe");
-        List<Booking> bookings = bookingService.findBookingsByPassenger("Jane Doe");
-        assertEquals(1, bookings.size());
-        String id = bookings.get(0).getId();
-        boolean result = bookingService.cancelBooking(id);
-        assertTrue(result);
-        assertTrue(bookingService.findBookingsByPassenger("Jane Doe").isEmpty());
-    }
+        Booking booking = new Booking("FL123", List.of("John Doe"));
+        String bookingId = booking.getId();
+        List<Booking> bookings = new ArrayList<>(List.of(booking));
+        when(bookingDaoMock.getAllBookings()).thenReturn(bookings);
 
-    @Test
-    public void testFindBookingsByPassenger() {
-        bookingService.createBooking("FL001", "Alice");
-        bookingService.createBooking("FL002", "Alice");
-        List<Booking> bookings = bookingService.findBookingsByPassenger("Alice");
-        assertEquals(2, bookings.size());
+        boolean result = bookingService.cancelBooking(bookingId);
+        assertTrue(result);
+
+        verify(bookingDaoMock).saveAllBookings(anyList());
     }
 
     @Test
     public void testCancelNonexistentBooking() {
+        List<Booking> bookings = new ArrayList<>();
+        when(bookingDaoMock.getAllBookings()).thenReturn(bookings);
+
         boolean result = bookingService.cancelBooking("nonexistent-id");
         assertFalse(result);
+
+        verify(bookingDaoMock, never()).saveAllBookings(anyList());
+    }
+
+    @Test
+    public void testGetByPassenger() {
+        Booking booking1 = new Booking("FL001", List.of("Alice"));
+        Booking booking2 = new Booking("FL002", List.of("Alice"));
+        List<Booking> bookings = List.of(booking1, booking2);
+        when(bookingDaoMock.getAllBookings()).thenReturn(bookings);
+
+        List<Booking> result = bookingService.getByPassenger("Alice");
+        assertEquals(2, result.size());
     }
 }

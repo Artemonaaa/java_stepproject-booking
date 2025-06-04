@@ -1,65 +1,54 @@
 package dao;
 
-import dao.BookingDao;
 import model.Booking;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
 
-public class BookingDaoTest {
+class BookingDaoTest {
 
-    private BookingDao dao;
+    private BookingDao bookingDao;
 
     @BeforeEach
     void setup() {
-        dao = new BookingDao() {
-            private final List<Booking> data = new java.util.ArrayList<>();
-
-            @Override
-            public void addBooking(Booking booking) { data.add(booking); }
-
-            @Override
-            public boolean deleteById(String id) {
-                return data.removeIf(b -> b.getId().equals(id));
-            }
-
-            @Override
-            public List<Booking> findByPassengerName(String name) {
-                return data.stream()
-                        .filter(b -> b.getPassengerName().equalsIgnoreCase(name))
-                        .toList();
-            }
-
-            @Override
-            public List<Booking> getAll() { return data; }
-        };
+        bookingDao = new BookingDao();
     }
 
     @Test
-    void testAddAndGetAll() {
-        dao.addBooking(new Booking("FL001", "Alice"));
-        List<Booking> all = dao.getAll();
-        assertEquals(1, all.size());
-        assertEquals("Alice", all.get(0).getPassengerName());
+    void testGetAllBookings() {
+        List<Booking> mockBookings = new ArrayList<>();
+        mockBookings.add(new Booking("FL001", List.of("Alice")));
+
+        try (MockedStatic<util.FileUtils> mockedFileUtils = Mockito.mockStatic(util.FileUtils.class)) {
+            mockedFileUtils.when(() -> util.FileUtils.loadBookings("bookings.dat"))
+                    .thenReturn(mockBookings);
+
+            List<Booking> bookings = bookingDao.getAllBookings();
+            assertEquals(1, bookings.size());
+            assertTrue(bookings.get(0).getPassengerNames().contains("Alice"));
+        }
     }
 
     @Test
-    void testDeleteById() {
-        Booking b = new Booking("FL002", "Bob");
-        dao.addBooking(b);
-        assertTrue(dao.deleteById(b.getId()));
-        assertTrue(dao.getAll().isEmpty());
-    }
+    void testSaveAllBookings() {
+        List<Booking> bookingsToSave = new ArrayList<>();
+        bookingsToSave.add(new Booking("FL002", List.of("Alice")));
 
-    @Test
-    void testFindByPassengerName() {
-        dao.addBooking(new Booking("FL003", "Charlie"));
-        dao.addBooking(new Booking("FL004", "Charlie"));
-        List<Booking> result = dao.findByPassengerName("Charlie");
-        assertEquals(2, result.size());
+        try (MockedStatic<util.FileUtils> mockedFileUtils = Mockito.mockStatic(util.FileUtils.class)) {
+            mockedFileUtils.when(() -> util.FileUtils.saveBookings("bookings.dat", bookingsToSave))
+                    .thenAnswer(invocation -> null);
+
+            bookingDao.saveAllBookings(bookingsToSave);
+
+            mockedFileUtils.verify(() -> util.FileUtils.saveBookings("bookings.dat", bookingsToSave), times(1));
+        }
     }
 }
-
