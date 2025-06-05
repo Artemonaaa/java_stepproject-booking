@@ -1,10 +1,10 @@
 package controller;
 
-import controller.BookingController;
 import model.Booking;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import service.BookingService;
+import service.FlightService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,36 +14,43 @@ import static org.mockito.Mockito.*;
 
 public class BookingControllerTest {
 
-    private BookingService mockService;
+    private BookingService mockBookingService;
+    private FlightService mockFlightService;
     private BookingController controller;
 
     @BeforeEach
     void setup() {
-        mockService = mock(BookingService.class);
-        controller = new BookingController(mockService);
+        mockBookingService = mock(BookingService.class);
+        mockFlightService = mock(FlightService.class);
+        controller = new BookingController(mockBookingService, mockFlightService);
     }
 
     @Test
-    void testBookDelegatesToService() {
-        controller.book("FL123", "Test User");
-        verify(mockService, times(1)).createBooking("FL123", "Test User");
+    void testBookDelegatesToServices() {
+        List<String> passengers = List.of("Test User");
+        when(mockFlightService.bookFlight("FL123", passengers)).thenReturn(true);
+
+        assertTrue(controller.book("FL123", passengers));
+        verify(mockFlightService, times(1)).bookFlight("FL123", passengers);
+        verify(mockBookingService, times(1)).bookFlight("FL123", passengers);
     }
 
     @Test
     void testCancelDelegatesToService() {
-        when(mockService.cancelBooking("abc")).thenReturn(true);
+        when(mockBookingService.cancelBooking("abc")).thenReturn(true);
+
         assertTrue(controller.cancel("abc"));
-        verify(mockService).cancelBooking("abc");
+        verify(mockBookingService).cancelBooking("abc");
     }
 
     @Test
     void testGetByPassengerDelegatesToService() {
         List<Booking> dummyList = new ArrayList<>();
-        dummyList.add(new Booking("FL200", "Jane Doe"));
-        when(mockService.findBookingsByPassenger("Jane Doe")).thenReturn(dummyList);
+        dummyList.add(new Booking("FL200", List.of("Jane Doe")));
+        when(mockBookingService.getByPassenger("Jane Doe")).thenReturn(dummyList);
 
         List<Booking> result = controller.getByPassenger("Jane Doe");
         assertEquals(1, result.size());
-        assertEquals("Jane Doe", result.get(0).getPassengerName());
+        assertTrue(result.get(0).getPassengerNames().contains("Jane Doe"));
     }
 }

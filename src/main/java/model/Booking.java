@@ -1,26 +1,36 @@
 package model;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 public class Booking implements Serializable {
-    private String id;
-    private String flightId;
-    private String passengerName;
+    private final String id;
+    private final String flightId;
+    private final List<String> passengerNames;
 
-    public Booking(String flightId, String passengerName) {
+    public Booking(String flightId, List<String> passengerNames) {
         this.id = UUID.randomUUID().toString();
         this.flightId = flightId;
-        this.passengerName = passengerName;
+        this.passengerNames = passengerNames;
     }
 
-    public String getId() { return id; }
-    public String getFlightId() { return flightId; }
-    public String getPassengerName() { return passengerName; }
+    public String getId() {
+        return id;
+    }
 
-    public void setFlightId(String flightId) { this.flightId = flightId; }
-    public void setPassengerName(String passengerName) { this.passengerName = passengerName; }
+    public String getFlightId() {
+        return flightId;
+    }
+
+    public List<String> getPassengerNames() {
+        return passengerNames;
+    }
+
+    public void setFlightId(String flightId) {
+        throw new UnsupportedOperationException("Flight ID cannot be changed.");
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -37,6 +47,6 @@ public class Booking implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("Booking{id='%s', flightId='%s', passengerName='%s'}", id, flightId, passengerName);
+        return String.format("Booking{id='%s', flightId='%s', passengerNames=%s}", id, flightId, passengerNames);
     }
 }

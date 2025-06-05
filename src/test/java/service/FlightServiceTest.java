@@ -1,10 +1,15 @@
 package service;
 
 import dao.FlightDAO;
+import model.Booking;
 import model.Flight;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import util.FileUtils;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,7 +29,6 @@ class FlightServiceTest {
 
         Flight testFlight = new Flight(testFlightId, "London", testTime, 200);
         when(flightDAOMock.getFlightById(testFlightId)).thenReturn(Optional.of(testFlight));
-        when(flightDAOMock.updateFlight(testFlight)).thenReturn(true);
     }
 
     @Test
@@ -61,11 +65,7 @@ class FlightServiceTest {
                 new Flight("FL101", "London", LocalDateTime.now().plusDays(1), 200)
         );
 
-        when(flightDAOMock.findFlights(
-                eq("London"),
-                any(LocalDateTime.class),
-                eq(2))
-        ).thenReturn(expectedFlights);
+        when(flightDAOMock.getAllFlights()).thenReturn(expectedFlights);
 
         List<Flight> actualFlights = flightService.searchFlights(
                 "London",
@@ -77,22 +77,22 @@ class FlightServiceTest {
     }
 
     @Test
-    void testBookSeats_Success() {
+    void testBookFlight_Success() {
         Flight testFlight = new Flight(testFlightId, "London", testTime, 200);
         when(flightDAOMock.getFlightById(testFlightId)).thenReturn(Optional.of(testFlight));
 
-        boolean result = flightService.bookSeats(testFlightId, 2);
+        boolean result = flightService.bookFlight(testFlightId, List.of("John Doe", "Jane Doe"));
         assertTrue(result);
         assertEquals(198, testFlight.getAvailableSeats());
         verify(flightDAOMock).updateFlight(testFlight);
     }
 
     @Test
-    void testBookSeats_NotEnoughSeats() {
+    void testBookFlight_NotEnoughSeats() {
         Flight testFlight = new Flight(testFlightId, "London", testTime, 1);
         when(flightDAOMock.getFlightById(testFlightId)).thenReturn(Optional.of(testFlight));
 
-        boolean result = flightService.bookSeats(testFlightId, 2);
+        boolean result = flightService.bookFlight(testFlightId, List.of("John Doe", "Jane Doe"));
         assertFalse(result);
         assertEquals(1, testFlight.getAvailableSeats());
         verify(flightDAOMock, never()).updateFlight(testFlight);
@@ -100,12 +100,18 @@ class FlightServiceTest {
 
     @Test
     void testCancelBooking() {
-        Flight testFlight = new Flight(testFlightId, "London", testTime, 198);
-        when(flightDAOMock.getFlightById(testFlightId)).thenReturn(Optional.of(testFlight));
+        Booking testBooking = new Booking(testFlightId, List.of("John Doe", "Jane Doe"));
+        List<Booking> mockBookings = new ArrayList<>(List.of(testBooking));
 
-        boolean result = flightService.cancelBooking(testFlightId, 2);
-        assertTrue(result);
-        assertEquals(200, testFlight.getAvailableSeats());
-        verify(flightDAOMock).updateFlight(testFlight);
+        try (MockedStatic<FileUtils> mockedFileUtils = mockStatic(FileUtils.class)) {
+            mockedFileUtils.when(() -> FileUtils.loadBookings("bookings.dat")).thenReturn(mockBookings);
+
+            boolean result = flightService.cancelBooking(testBooking.getId());
+            assertTrue(result);
+            verify(flightDAOMock).updateFlight(any(Flight.class));
+
+            mockedFileUtils.verify(() -> FileUtils.loadBookings("bookings.dat"));
+            mockedFileUtils.verify(() -> FileUtils.saveBookings(eq("bookings.dat"), anyList()));
+        }
     }
 }

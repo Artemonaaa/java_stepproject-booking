@@ -15,13 +15,12 @@ public class FileUtils {
 
     public static List<Booking> loadBookings(String file) {
         File f = new File(file);
-        if (!f.exists()) return null;
+        if (!f.exists()) return List.of();
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
             return (List<Booking>) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("Не вдалося завантажити бронювання: " + e.getMessage());
-            return null;
+            return List.of();
         }
     }
-
 }

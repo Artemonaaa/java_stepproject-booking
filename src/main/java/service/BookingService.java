@@ -1,35 +1,45 @@
 package service;
 
 import dao.BookingDao;
-import exception.BookingNotFoundException;
 import model.Booking;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class BookingService {
     private final BookingDao bookingDao;
+    private final List<String> bookings = new ArrayList<>();
 
     public BookingService(BookingDao bookingDao) {
         this.bookingDao = bookingDao;
     }
 
-    public void createBooking(String flightId, String passengerName) {
-        bookingDao.addBooking(new Booking(flightId, passengerName));
-    }
-
-    public boolean cancelBooking(String bookingId) {
-        boolean removed = bookingDao.deleteById(bookingId);
-        if (!removed) {
-            throw new BookingNotFoundException("Booking with ID " + bookingId + " not found.");
-        }
+    public boolean bookFlight(String flightId, List<String> passengerNames) {
+        List<Booking> bookings = new ArrayList<>(bookingDao.getAllBookings());
+        Booking newBooking = new Booking(flightId, passengerNames);
+        bookings.add(newBooking);
+        bookingDao.saveAllBookings(bookings);
         return true;
     }
 
-    public List<Booking> findBookingsByPassenger(String name) {
-        return bookingDao.findByPassengerName(name);
+    public boolean cancelBooking(String bookingId) {
+        List<Booking> bookings = bookingDao.getAllBookings();
+        Optional<Booking> bookingOpt = bookings.stream()
+                .filter(b -> b.getId().equals(bookingId))
+                .findFirst();
+        if (bookingOpt.isPresent()) {
+            bookings.remove(bookingOpt.get());
+            bookingDao.saveAllBookings(bookings);
+            return true;
+        }
+        return false;
     }
 
-    public void save() {
-        bookingDao.saveData();
+    public List<Booking> getByPassenger(String name) {
+        return bookingDao.getAllBookings().stream()
+                .filter(b -> b.getPassengerNames().contains(name))
+                .collect(Collectors.toList());
     }
 }
