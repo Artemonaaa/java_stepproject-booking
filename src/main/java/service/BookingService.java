@@ -42,4 +42,8 @@ public class BookingService {
                 .filter(b -> b.getPassengerNames().contains(name))
                 .collect(Collectors.toList());
     }
+
+    public void save() {
+        bookingDao.saveAllBookings(bookingDao.getAllBookings());
+    }
 }

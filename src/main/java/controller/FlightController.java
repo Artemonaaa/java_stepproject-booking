@@ -2,6 +2,7 @@ package controller;
 
 import model.Flight;
 import service.FlightService;
+import exception.InvalidFlightException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,5 +33,18 @@ public class FlightController {
 
     public boolean cancelBooking(String bookingId) {
         return flightService.cancelBooking(bookingId);
+    }
+
+    public List<Flight> getAllFlights() {
+        return flightService.getAllFlights();
+    }
+
+    public Flight getFlight(String flightId) throws InvalidFlightException {
+        return flightService.getFlightInfo(flightId)
+                .orElseThrow(() -> new InvalidFlightException("Рейс з ID " + flightId + " не знайдено"));
+    }
+
+    public void save() {
+        flightService.save();
     }
 }

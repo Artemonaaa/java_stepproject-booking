@@ -85,4 +85,14 @@ public class FlightService {
         }
         return List.of();
     }
+
+    public List<Flight> getAllFlights() {
+        return flightDAO.getAllFlights().stream()
+                .sorted(Comparator.comparing(Flight::getDepartureTime))
+                .collect(Collectors.toList());
+    }
+
+    public void save() {
+        flightDAO.save();
+    }
 }

@@ -2,8 +2,11 @@ package controller;
 
 import service.BookingService;
 import service.FlightService;
+import model.Flight;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import model.Booking;
 
 public class BookingController {
@@ -29,5 +32,17 @@ public class BookingController {
 
     public boolean cancel(String bookingId) {
         return bookingService.cancelBooking(bookingId);
+    }
+
+    public void save() {
+        bookingService.save();
+    }
+
+    public List<Flight> getMyFlights(String passengerName) {
+        return getByPassenger(passengerName).stream()
+                .map(booking -> flightService.getFlightInfo(booking.getFlightId()))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
     }
 }
