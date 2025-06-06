@@ -32,11 +32,15 @@ public class BookingController {
         if (!bookings.isEmpty()) {
             System.out.println("\n=== Ваші бронювання ===");
             bookings.forEach(booking -> {
+                System.out.println("-------------------");
                 System.out.printf("ID бронювання: %s%n", booking.getId());
                 System.out.printf("ID рейсу: %s%n", booking.getFlightId());
                 System.out.printf("Пасажири: %s%n", String.join(", ", booking.getPassengerNames()));
                 System.out.println("-------------------");
             });
+            System.out.println("\nДля скасування бронювання використовуйте ID бронювання");
+        } else {
+            System.out.println("\nУ вас немає активних бронювань");
         }
         return bookings;
     }
