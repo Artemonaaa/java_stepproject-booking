@@ -43,17 +43,4 @@ public class FlightController {
     public void save() {
         flightService.save();
     }
-
-    public List<Flight> getAllFlights() {
-        return flightService.getAllFlights();
-    }
-
-    public Flight getFlight(String flightId) throws InvalidFlightException {
-        return flightService.getFlightInfo(flightId)
-                .orElseThrow(() -> new InvalidFlightException("Рейс з ID " + flightId + " не знайдено"));
-    }
-
-    public void save() {
-        flightService.save();
-    }
 }
