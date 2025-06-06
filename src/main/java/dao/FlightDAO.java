@@ -50,6 +50,10 @@ public class FlightDAO {
         return false;
     }
 
+    public void save() {
+        saveFlights();
+    }
+
     private void generateSampleFlights() {
         LocalDateTime now = LocalDateTime.now();
         String[] destinations = {"New York", "London", "Paris", "Tokyo", "Berlin", "Rome", "Madrid", "Sydney"};

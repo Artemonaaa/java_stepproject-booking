@@ -17,7 +17,7 @@ public class Main {
         FlightController flightController = new FlightController(flightService);
         BookingController bookingController = new BookingController(bookingService, flightService);
 
-        ConsoleUI ui = new ConsoleUI(flightController, bookingController);
+        ConsoleUI ui = new ConsoleUI(bookingController, flightController);
         ui.start();
     }
 }
