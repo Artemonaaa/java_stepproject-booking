@@ -31,10 +31,6 @@ public class FlightController {
         return flightService.bookFlight(flightId, passengerNames);
     }
 
-    public boolean cancelBooking(String bookingId) {
-        return flightService.cancelBooking(bookingId);
-    }
-
     public List<Flight> getAllFlights() {
         return flightService.getAllFlights();
     }

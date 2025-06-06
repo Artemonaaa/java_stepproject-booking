@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import service.FlightService;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,7 +17,9 @@ class FlightControllerTest {
     private FlightController flightController;
     private FlightService flightServiceMock;
     private final String testFlightId = "FL101";
-    private final LocalDateTime testTime = LocalDateTime.now().plusHours(2);
+    private final String testDestination = "New York";
+    private final LocalDateTime testDateTime = LocalDateTime.now().plusHours(2);
+    private final int testPassengers = 2;
 
     @BeforeEach
     void setUp() {
@@ -26,56 +29,53 @@ class FlightControllerTest {
 
     @Test
     void testGetFlightsNext24Hours() {
-        List<Flight> mockFlights = List.of(new Flight("FL101", "London", testTime, 200));
-        when(flightServiceMock.getFlightsNext24Hours()).thenReturn(mockFlights);
+        List<Flight> expectedFlights = Arrays.asList(
+                new Flight("FL101", "New York", LocalDateTime.now().plusHours(2), 150),
+                new Flight("FL102", "London", LocalDateTime.now().plusHours(4), 200)
+        );
+        when(flightServiceMock.getFlightsNext24Hours()).thenReturn(expectedFlights);
 
         List<Flight> result = flightController.getFlightsNext24Hours();
 
-        assertEquals(1, result.size());
-        assertEquals("FL101", result.get(0).getId());
+        assertEquals(expectedFlights, result);
+        verify(flightServiceMock).getFlightsNext24Hours();
     }
 
     @Test
     void testGetFlightInfo() {
-        Flight mockFlight = new Flight(testFlightId, "London", testTime, 200);
-        when(flightServiceMock.getFlightInfo(testFlightId)).thenReturn(Optional.of(mockFlight));
+        Flight expectedFlight = new Flight(testFlightId, testDestination, testDateTime, 150);
+        when(flightServiceMock.getFlightInfo(testFlightId)).thenReturn(Optional.of(expectedFlight));
 
         Optional<Flight> result = flightController.getFlightInfo(testFlightId);
 
         assertTrue(result.isPresent());
-        assertEquals(testFlightId, result.get().getId());
+        assertEquals(expectedFlight, result.get());
+        verify(flightServiceMock).getFlightInfo(testFlightId);
     }
 
     @Test
     void testSearchFlights() {
-        List<Flight> expectedFlights = List.of(new Flight("FL101", "London", testTime, 200));
-        when(flightServiceMock.searchFlights(eq("London"), any(LocalDateTime.class), eq(2)))
+        List<Flight> expectedFlights = Arrays.asList(
+                new Flight("FL101", testDestination, testDateTime, 150),
+                new Flight("FL102", testDestination, testDateTime.plusHours(2), 200)
+        );
+        when(flightServiceMock.searchFlights(testDestination, testDateTime, testPassengers))
                 .thenReturn(expectedFlights);
 
-        List<Flight> actualFlights = flightController.searchFlights("London", LocalDateTime.now(), 2);
+        List<Flight> result = flightController.searchFlights(testDestination, testDateTime, testPassengers);
 
-        assertEquals(1, actualFlights.size());
-        assertEquals("London", actualFlights.get(0).getDestination());
+        assertEquals(expectedFlights, result);
+        verify(flightServiceMock).searchFlights(testDestination, testDateTime, testPassengers);
     }
 
     @Test
     void testBookFlight() {
-        List<String> passengerNames = List.of("John Doe", "Jane Doe");
+        List<String> passengerNames = Arrays.asList("John Doe", "Jane Doe");
         when(flightServiceMock.bookFlight(testFlightId, passengerNames)).thenReturn(true);
 
         boolean result = flightController.bookFlight(testFlightId, passengerNames);
 
         assertTrue(result);
         verify(flightServiceMock).bookFlight(testFlightId, passengerNames);
-    }
-
-    @Test
-    void testCancelBooking() {
-        when(flightServiceMock.cancelBooking(testFlightId)).thenReturn(true);
-
-        boolean result = flightController.cancelBooking(testFlightId);
-
-        assertTrue(result);
-        verify(flightServiceMock).cancelBooking(testFlightId);
     }
 }

@@ -2,6 +2,7 @@ package service;
 
 import dao.BookingDao;
 import model.Booking;
+import exception.BookingNotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,17 +25,26 @@ public class BookingService {
         return true;
     }
 
-    public boolean cancelBooking(String bookingId) {
+    public Booking getBookingById(String bookingId) throws BookingNotFoundException {
+        return bookingDao.getAllBookings().stream()
+                .filter(b -> b.getId().equals(bookingId))
+                .findFirst()
+                .orElseThrow(() -> new BookingNotFoundException("Бронювання з ID " + bookingId + " не знайдено"));
+    }
+
+    public boolean cancelBooking(String bookingId) throws BookingNotFoundException {
         List<Booking> bookings = bookingDao.getAllBookings();
         Optional<Booking> bookingOpt = bookings.stream()
                 .filter(b -> b.getId().equals(bookingId))
                 .findFirst();
+        
         if (bookingOpt.isPresent()) {
-            bookings.remove(bookingOpt.get());
+            Booking booking = bookingOpt.get();
+            bookings.remove(booking);
             bookingDao.saveAllBookings(bookings);
             return true;
         }
-        return false;
+        throw new BookingNotFoundException("Бронювання з ID " + bookingId + " не знайдено");
     }
 
     public List<Booking> getByPassenger(String name) {
