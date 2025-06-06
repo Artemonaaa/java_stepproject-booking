@@ -1,15 +1,11 @@
 package service;
 
 import dao.FlightDAO;
-import model.Booking;
 import model.Flight;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import util.FileUtils;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -96,22 +92,5 @@ class FlightServiceTest {
         assertFalse(result);
         assertEquals(1, testFlight.getAvailableSeats());
         verify(flightDAOMock, never()).updateFlight(testFlight);
-    }
-
-    @Test
-    void testCancelBooking() {
-        Booking testBooking = new Booking(testFlightId, List.of("John Doe", "Jane Doe"));
-        List<Booking> mockBookings = new ArrayList<>(List.of(testBooking));
-
-        try (MockedStatic<FileUtils> mockedFileUtils = mockStatic(FileUtils.class)) {
-            mockedFileUtils.when(() -> FileUtils.loadBookings("bookings.dat")).thenReturn(mockBookings);
-
-            boolean result = flightService.cancelBooking(testBooking.getId());
-            assertTrue(result);
-            verify(flightDAOMock).updateFlight(any(Flight.class));
-
-            mockedFileUtils.verify(() -> FileUtils.loadBookings("bookings.dat"));
-            mockedFileUtils.verify(() -> FileUtils.saveBookings(eq("bookings.dat"), anyList()));
-        }
     }
 }

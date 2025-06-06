@@ -2,6 +2,7 @@ package service;
 
 import dao.BookingDao;
 import model.Booking;
+import exception.BookingNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -34,7 +35,7 @@ public class BookingServiceTest {
     }
 
     @Test
-    public void testCancelBooking() {
+    public void testCancelBooking() throws BookingNotFoundException {
         Booking booking = new Booking("FL123", List.of("John Doe"));
         String bookingId = booking.getId();
         List<Booking> bookings = new ArrayList<>(List.of(booking));
@@ -51,8 +52,9 @@ public class BookingServiceTest {
         List<Booking> bookings = new ArrayList<>();
         when(bookingDaoMock.getAllBookings()).thenReturn(bookings);
 
-        boolean result = bookingService.cancelBooking("nonexistent-id");
-        assertFalse(result);
+        assertThrows(BookingNotFoundException.class, () -> 
+            bookingService.cancelBooking("nonexistent-id")
+        );
 
         verify(bookingDaoMock, never()).saveAllBookings(anyList());
     }

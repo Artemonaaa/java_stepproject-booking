@@ -3,6 +3,7 @@ package controller;
 import service.BookingService;
 import service.FlightService;
 import model.Flight;
+import exception.BookingNotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,11 +28,34 @@ public class BookingController {
     }
 
     public List<Booking> getByPassenger(String passengerName) {
-        return bookingService.getByPassenger(passengerName);
+        List<Booking> bookings = bookingService.getByPassenger(passengerName);
+        if (!bookings.isEmpty()) {
+            System.out.println("\n=== Ваші бронювання ===");
+            bookings.forEach(booking -> {
+                System.out.println("-------------------");
+                System.out.printf("ID бронювання: %s%n", booking.getId());
+                System.out.printf("ID рейсу: %s%n", booking.getFlightId());
+                System.out.printf("Пасажири: %s%n", String.join(", ", booking.getPassengerNames()));
+                System.out.println("-------------------");
+            });
+            System.out.println("\nДля скасування бронювання використовуйте ID бронювання");
+        } else {
+            System.out.println("\nУ вас немає активних бронювань");
+        }
+        return bookings;
     }
 
-    public boolean cancel(String bookingId) {
-        return bookingService.cancelBooking(bookingId);
+    public boolean cancel(String bookingId) throws BookingNotFoundException {
+        Booking booking = bookingService.getBookingById(bookingId);
+
+        if (bookingService.cancelBooking(bookingId)) {
+            flightService.getFlightInfo(booking.getFlightId()).ifPresent(flight -> {
+                flight.setAvailableSeats(flight.getAvailableSeats() + booking.getPassengerNames().size());
+                flightService.save();
+            });
+            return true;
+        }
+        return false;
     }
 
     public void save() {

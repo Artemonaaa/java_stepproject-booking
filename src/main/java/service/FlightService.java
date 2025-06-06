@@ -1,9 +1,7 @@
 package service;
 
 import dao.FlightDAO;
-import model.Booking;
 import model.Flight;
-import util.FileUtils;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -52,38 +50,6 @@ public class FlightService {
             }
         }
         return false;
-    }
-
-    public boolean cancelBooking(String bookingId) {
-        List<Booking> bookings = FileUtils.loadBookings("bookings.dat");
-        if (bookings != null) {
-            Optional<Booking> bookingOpt = bookings.stream()
-                    .filter(b -> b.getId().equals(bookingId))
-                    .findFirst();
-            if (bookingOpt.isPresent()) {
-                Booking booking = bookingOpt.get();
-                bookings.remove(booking);
-                FileUtils.saveBookings("bookings.dat", bookings);
-                // Update flight seats
-                Optional<Flight> flightOpt = flightDAO.getFlightById(booking.getFlightId());
-                flightOpt.ifPresent(flight -> {
-                    flight.setAvailableSeats(flight.getAvailableSeats() + booking.getPassengerNames().size());
-                    flightDAO.updateFlight(flight);
-                });
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public List<Booking> getBookingsByPassenger(String name) {
-        List<Booking> bookings = FileUtils.loadBookings("bookings.dat");
-        if (bookings != null) {
-            return bookings.stream()
-                    .filter(b -> b.getPassengerNames().contains(name))
-                    .collect(Collectors.toList());
-        }
-        return List.of();
     }
 
     public List<Flight> getAllFlights() {
