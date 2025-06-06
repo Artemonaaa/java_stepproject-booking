@@ -1,13 +1,16 @@
 package controller;
 
 import model.Booking;
+import model.Flight;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import service.BookingService;
 import service.FlightService;
+import exception.BookingNotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -37,10 +40,20 @@ public class BookingControllerTest {
 
     @Test
     void testCancelDelegatesToService() {
+        Booking dummyBooking = new Booking("FL123", List.of("John Doe"));
+        when(mockBookingService.getBookingById("abc")).thenReturn(dummyBooking);
         when(mockBookingService.cancelBooking("abc")).thenReturn(true);
 
         assertTrue(controller.cancel("abc"));
         verify(mockBookingService).cancelBooking("abc");
+    }
+
+    @Test
+    void testCancelThrowsExceptionWhenBookingNotFound() {
+        String bookingId = "abc";
+        when(mockBookingService.getBookingById(bookingId)).thenThrow(new BookingNotFoundException("Бронювання не знайдено"));
+
+        assertThrows(BookingNotFoundException.class, () -> controller.cancel(bookingId));
     }
 
     @Test

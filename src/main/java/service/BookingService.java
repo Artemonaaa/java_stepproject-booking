@@ -11,10 +11,21 @@ import java.util.stream.Collectors;
 
 public class BookingService {
     private final BookingDao bookingDao;
-    private final List<String> bookings = new ArrayList<>();
 
     public BookingService(BookingDao bookingDao) {
         this.bookingDao = bookingDao;
+        migrateOldBookings();
+    }
+
+    private void migrateOldBookings() {
+        List<Booking> oldBookings = bookingDao.getAllBookings();
+        if (!oldBookings.isEmpty()) {
+            List<Booking> newBookings = oldBookings.stream()
+                    .map(booking -> new Booking(booking.getFlightId(), booking.getPassengerNames()))
+                    .collect(Collectors.toList());
+            bookingDao.saveAllBookings(newBookings);
+            System.out.println("Старих бронювань мігровано: " + newBookings.size());
+        }
     }
 
     public boolean bookFlight(String flightId, List<String> passengerNames) {
